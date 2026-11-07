@@ -12,9 +12,6 @@ Analysis code for the manuscript:
 | `scripts/R144_analysis.py` | Full analysis script that writes all tables and `results.json` |
 | `requirements.txt` | Python packages |
 
-## Data
-
-The raw data are not included in this repository. They are available from the corresponding author on reasonable request. To run the code, place the data file `Tur_compiled_analysis_ready.xlsx` in a folder named `data/` (local run) or upload it when Cell 1 asks for it (Colab).
 
 ## Notebook cells
 
@@ -35,6 +32,4 @@ pip install -r requirements.txt
 python scripts/R144_analysis.py      # run from the repository root; needs data/Tur_compiled_analysis_ready.xlsx
 ```
 
-## Citation
 
-Please cite the article once published. GenBank accession of the ITS sequence: PZ236463.
