@@ -41,7 +41,7 @@ enz = pd.read_excel(DATA, "Enzyme_Activity")
 les = pd.read_excel(DATA, "Lesion_Size")
 enz["Enzyme"] = enz["Enzyme"].str.strip()
 les["LW_ratio"] = les["Length_cm"] / les["Width_cm"]
-les["LxW_cm2"] = les["Length_cm"] * les["Width_cm"]
+les["Area_cm2"] = les["Length_cm"] * les["Width_cm"]   # zone area = L x W for every zone (Methods 2.7)
 ENZ_ORDER = list(dict.fromkeys(enz["Enzyme"]))
 RES = {}
 
@@ -327,12 +327,6 @@ for v in ["Length_cm", "Width_cm", "Area_cm2"]:
     rates[v + "_per_day"] = vals
 fold = (m.loc[180] / m.loc[60]).to_dict()
 RES["lesion_fold_60_180"] = fold
-# agreement between recorded area and L x W
-diff = les["Area_cm2"] - les["LxW_cm2"]
-RES["area_vs_LxW"] = dict(mean_diff=float(diff.mean()), sd_diff=float(diff.std()),
-                          max_abs=float(diff.abs().max()),
-                          r=float(stats.pearsonr(les["Area_cm2"], les["LxW_cm2"])[0]),
-                          n_equal_2dp=int((diff.abs() < 0.005).sum()))
 RES["L_W_corr"] = {int(k): float(stats.spearmanr(g["Length_cm"], g["Width_cm"])[0]) for k, g in les.groupby("DAI")}
 
 #%% ---- 6. Data-integrity screening (run before submission!) -----------------
@@ -459,7 +453,7 @@ fig.tight_layout(w_pad=1.2); save(fig, "Figure6A_discoloration")
 # Supplementary Figure S3 – residual diagnostics
 fig, axs = plt.subplots(2, 4, figsize=(7.09, 3.6))
 sets = [(temp, "Temperature_C", "Radial_Growth_mm", "Temperature"), (ph, "pH", "Radial_Growth_mm", "pH"),
-        (enz, "Enzyme", "Activity_U_per_ml", "Enzymes"), (les, "DAI", "Area_cm2", "Lesion area")]
+        (enz, "Enzyme", "Activity_U_per_ml", "Enzymes"), (les.assign(ln_Area=np.log(les["Area_cm2"])), "DAI", "ln_Area", "ln lesion area")]
 for j, (df_, g, y, t) in enumerate(sets):
     fitted = df_.groupby(g)[y].transform("mean"); res_ = df_[y] - fitted
     stats.probplot(res_, dist="norm", plot=axs[0, j])
@@ -509,7 +503,6 @@ print("SMA ln(length) ~ ln(width):", {k: (np.round(v, 2).tolist() if isinstance(
 print("Area models:", {k: (round(v["dAICc"], 1), round(v["weight"], 3)) for k, v in RES["area_models"].items()})
 print("Mean expansion rates between harvests:\n", rates.round(4).to_string(index=False))
 print("Fold change 60->180 DAI:", {k: round(v, 2) for k, v in fold.items()})
-print("Area vs LxW:", RES["area_vs_LxW"])
 print("\nDATA-INTEGRITY SCREEN")
 for k in ["temperature", "pH", "enzyme_activity", "absorbance"]:
     print(f"  {k}: {integ[k]['n_exactly_symmetric']}/{integ[k]['n_triplets']} replicate triplets have middle value = midpoint of the other two")
